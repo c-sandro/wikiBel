@@ -1,12 +1,9 @@
-from typing import List, Optional, Any
-
-from Tools.i18n.msgfmt import generate
 from fastapi import APIRouter, status, Depends, HTTPException, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from models.member_model import MemberModel
 from schemas.member_schema import MemberSchemaBase, MemberSchemaCreated, MemberSchemaUpdated
@@ -14,11 +11,43 @@ from core.deps import get_session, get_current_member
 from core.security import generate_password_hash
 from core.auth import authenticate_member, create_access_token
 
+import requests
+
+import re
+
 router = APIRouter()
+
+password_regex: str = "^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{7,})\S$"
+email_regex: str = "^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$"
+
+logged_in_user_token: str = ''
+
+session = requests.Session()
+response = session.get(
+    'http://localhost:8000/api/v1/members/account',
+    cookies={'bearer': logged_in_user_token}
+)
 
 #POST member (criar conta)
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=MemberSchemaBase)
 async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depends(get_session)):
+
+    if not re.search(password_regex, member.password_u):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Password too weak (needs lower case, upper case, a number and at least 8 characters)")
+    if not re.search(email_regex, member.email_u):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Invalid email address")
+
+    async with db as session:
+        query = select(MemberModel).filter(MemberModel.email_u == member.email_u)
+        result = await session.execute(query)
+        member_check = result.scalar_one_or_none()
+
+        if member_check:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="Email is already in use")
+
     new_member: MemberModel = MemberModel(
         name_u=member.name_u,
         email_u=member.email_u,
@@ -38,7 +67,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     if not member:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
 
-    return JSONResponse(content={"acess_token": create_access_token(subject=member.id_u), "token_type": "bearer"}, status_code=status.HTTP_200_OK)
+    logged_in_user_token = create_access_token(subject=member.id_u)
+    return JSONResponse(content={"access_token": logged_in_user_token, "token_type": "bearer"}, status_code=status.HTTP_200_OK)
 
 #GET member (ver membro logado)
 @router.get('/account', response_model=MemberSchemaBase)

@@ -23,7 +23,7 @@ async def get_session() -> Generator:
     finally:
         await session.close()
 
-async def get_current_member(db: Session = Depends(get_session), token: str = Depends(oauth2_schema)) -> MemberModel:
+async def get_current_member(token: str, db: Session = Depends(get_session)) -> MemberModel:
     credentials_exception: HTTPException = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -49,7 +49,7 @@ async def get_current_member(db: Session = Depends(get_session), token: str = De
     async with db as session:
         query = select(MemberModel).filter(MemberModel.id_u == int(token_data.username))
         result = await session.execute(query)
-        member: MemberModel = result.scalars().unique().one_or_none()
+        member: MemberModel = result.scalars().unique_one_or_none()
 
         if member is None:
             raise credentials_exception

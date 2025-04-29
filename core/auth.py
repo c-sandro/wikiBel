@@ -1,6 +1,6 @@
 from pytz import timezone
 
-from typing import Optional, List
+from typing import Optional
 from datetime import datetime, timedelta
 
 from fastapi.security import OAuth2PasswordBearer
@@ -8,7 +8,6 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import jwt
-from sqlalchemy.sql.functions import user
 
 from models.member_model import MemberModel
 from core.configs import settings

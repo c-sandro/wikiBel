@@ -7,11 +7,16 @@ from api.v1.api import api_router
 app = FastAPI(title='WikiBel - Repertório de Belém')
 app.include_router(api_router, prefix=settings.API_V1_SRT)
 
-@app.get("/menu", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def root():
     return FileResponse('templates/menu.html')
 
-
+@app.get("/api/v1/members/login", response_class=HTMLResponse)
+async def login_screen():
+    return FileResponse('templates/login.html')
+@app.get("/api/v1/members/signup", response_class=HTMLResponse)
+async def signup_screen():
+    return FileResponse('templates/signup.html')
 
 if __name__ == "__main__":
     import uvicorn

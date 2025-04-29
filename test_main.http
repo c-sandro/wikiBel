@@ -1,12 +1,7 @@
-POST http://localhost:8000/api/v1/members/login
-Content-Type: multipart/form-data; boundary=xd
+POST http://localhost:8000/api/v1/members/signup?json={"name_u":"admin","email_u":"admin.@admin.com","password_u":"admin"}
+Content-Type: application/json
 
---xd
-Content-Disposition: form-data; name="username"
+{
 
-admin@admin.com
---xd
-Content-Disposition: form-data; name="password"
-
-admin
---xd--j
+}
+###

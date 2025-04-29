@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conta</title>
+    <script>
+        async function main() {
+            const name = document.getElementById("name")
+            const email = document.getElementById("email")
+            const is_premium = document.getElementById("is_premium")
+
+            const url = 'http://0.0.0.0:8000/api/v1/members/account'
+            const response = await fetch(url)
+
+            name.value = response.name_u
+            email.value = response.email_u
+            is_premium.value = response.is_premium_u
+        }
+    </script>
+</head>
+<body onload="main()">
+    <h1>CONTA</h1>
+    <div id="name"></div><br>
+    <div id="email"></div><br>
+    <div id="is_premium"></div><br>
+    <button onclick="window.location.href = '/'">Voltar</button>
+</body>
+</html>

@@ -2,19 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Menu</title>
 </head>
 <body>
-    <label for="email">
-        email: <input type="text" id="email">
-    </label><br><br>
-    <label for="password">
-        senha: <input type="text" id="password">
-    </label><br><br>
-    <button onclick="
-        window.location.href='/api/v1/members/login?username=' +
-                            document.getElementById('email').textContent + '&password=' +
-                            document.getElementById('password').textContent">Clique</button>
+    <h1>MENU</h1>
+    <button onclick="window.location.href = '/api/v1/members/login'">LOGIN</button>
+    <button onclick="window.location.href = '/api/v1/members/signup'">CRIAR CONTA</button>
+    <button onclick="window.location.href = '/api/v1/members/account'">VER CONTA</button>
 </body>
 </html>
