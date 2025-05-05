@@ -22,12 +22,6 @@ email_regex: str = "^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$"
 
 logged_in_user_token: str = ''
 
-session = requests.Session()
-response = session.get(
-    'http://localhost:8000/api/v1/members/account',
-    cookies={'bearer': logged_in_user_token}
-)
-
 #POST member (criar conta)
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=MemberSchemaBase)
 async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depends(get_session)):

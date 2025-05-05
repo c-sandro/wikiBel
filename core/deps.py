@@ -1,4 +1,4 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, Annotated
 
 from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
@@ -23,12 +23,14 @@ async def get_session() -> Generator:
     finally:
         await session.close()
 
-async def get_current_member(token: str, db: Session = Depends(get_session)) -> MemberModel:
+async def get_current_member(token = Depends(oauth2_schema), db: Session = Depends(get_session)) -> MemberModel:
     credentials_exception: HTTPException = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"}
     )
+
+    print(token)
 
     try:
         payload = jwt.decode(
