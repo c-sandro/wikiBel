@@ -1,17 +1,16 @@
-from fastapi import APIRouter, status, Depends, HTTPException, Response
+from fastapi import APIRouter, status, Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.configs import settings
 from models.member_model import MemberModel
 from schemas.member_schema import MemberSchemaBase, MemberSchemaCreated, MemberSchemaUpdated
-from core.deps import get_session, get_current_member
+from core.deps import get_session
 from core.security import generate_password_hash
 from core.auth import authenticate_member, create_access_token
-
-import requests
 
 import re
 
@@ -21,6 +20,7 @@ password_regex: str = "^((?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9]).{7,})\S$"
 email_regex: str = "^((?!\.)[\w\-_.]*[^.])(@\w+)(\.\w+(\.\w+)?[^.\W])$"
 
 logged_in_user_token: str = ''
+member_cookie = None
 
 #POST member (criar conta)
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=MemberSchemaBase)
@@ -33,20 +33,33 @@ async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depend
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Invalid email address")
 
+    import uuid
+
+    new_token: str = None
     async with db as session:
         query = select(MemberModel).filter(MemberModel.email_u == member.email_u)
         result = await session.execute(query)
-        member_check = result.scalar_one_or_none()
+        unique_email_check = result.scalar_one_or_none()
 
-        if member_check:
+        if unique_email_check:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail="Email is already in use")
+
+
+        while True:
+            new_token: str = uuid.uuid4()
+            query = select(MemberModel).filter(MemberModel.token_u == str(new_token))
+            result = await session.execute(query)
+            unique_token_check = result.scalar_one_or_none()
+            if not unique_token_check:
+                break
 
     new_member: MemberModel = MemberModel(
         name_u=member.name_u,
         email_u=member.email_u,
         password_u=generate_password_hash(member.password_u),
-        is_premium_u=False
+        is_premium_u=False,
+        token_u=str(new_token)
     )
 
     async with db as session:
@@ -61,13 +74,46 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     if not member:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
 
-    logged_in_user_token = create_access_token(subject=member.id_u)
-    return JSONResponse(content={"access_token": logged_in_user_token, "token_type": "bearer"}, status_code=status.HTTP_200_OK)
+    logged_in_user_token = create_access_token(subject=member.token_u)
+    response = JSONResponse(content={"access_token": logged_in_user_token, "token_type": "bearer"}, status_code=status.HTTP_200_OK)
+    response.set_cookie(key="access_token", value=f"{logged_in_user_token}", path=f"{settings.API_V1_SRT}/members/account", httponly=True)
+    return response
 
 #GET member (ver membro logado)
 @router.get('/account', response_model=MemberSchemaBase)
-def get_logged_in_member(logged_in_member: MemberModel = Depends(get_current_member)):
-    return logged_in_member
+async def get_account(request: Request, db: AsyncSession = Depends(get_session)):
+    credentials_exception: HTTPException = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
+    from jose import jwt, JWTError
+
+    try:
+        payload = jwt.decode(
+            request.cookies.get("access_token"),
+            settings.JWT_SECRET,
+            algorithms=[settings.ALGORITHM],
+            options={"verify_aud": False},
+        )
+
+        username: str = payload.get('sub')
+        if username is None:
+            raise credentials_exception
+
+    except JWTError:
+        raise credentials_exception
+
+    async with db as session:
+        query = select(MemberModel).filter(MemberModel.token_u == username)
+        result = await session.execute(query)
+        member = result.scalar_one_or_none()
+
+        if member:
+            return member
+
+        raise credentials_exception
 
 '''
 #GET members
@@ -84,7 +130,7 @@ async def get_members(db: AsyncSession = Depends(get_session)):
 @router.get('/{member_id}', response_model=MemberSchemaBase, status_code=status.HTTP_200_OK)
 async def get_member(member_id: int, db: AsyncSession = Depends(get_session)):
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.id == member_id)
+        query = select(MemberModel).filter(MemberModel.id_u == member_id)
         result = await session.execute(query)
         member = result.scalar_one_or_none()
 

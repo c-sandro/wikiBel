@@ -17,6 +17,9 @@ async def login_screen():
 @app.get("/api/v1/members/signup", response_class=HTMLResponse)
 async def signup_screen():
     return FileResponse('templates/signup.html')
+@app.get("/api/v1/members/account", response_class=HTMLResponse)
+async def account_screen():
+    return FileResponse('templates/account.html')
 
 if __name__ == "__main__":
     import uvicorn

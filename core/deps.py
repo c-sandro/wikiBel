@@ -1,6 +1,6 @@
-from typing import Generator, Optional, Annotated
+from typing import Generator, Optional
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -23,37 +23,34 @@ async def get_session() -> Generator:
     finally:
         await session.close()
 
-async def get_current_member(token = Depends(oauth2_schema), db: Session = Depends(get_session)) -> MemberModel:
+async def get_current_member(member_cookie, db: AsyncSession = Depends(get_session)):
     credentials_exception: HTTPException = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"}
     )
 
-    print(token)
-
     try:
         payload = jwt.decode(
-            token,
+            member_cookie,
             settings.JWT_SECRET,
             algorithms=[settings.ALGORITHM],
             options={"verify_aud": False},
         )
 
-        username: str = payload.get("sub")
+        username: str = payload.get('sub')
         if username is None:
             raise credentials_exception
 
-        token_data: TokenData = TokenData(username=username)
     except JWTError:
         raise credentials_exception
 
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.id_u == int(token_data.username))
+        query = select(MemberModel).filter(MemberModel.id_u == username)
         result = await session.execute(query)
-        member: MemberModel = result.scalars().unique_one_or_none()
+        member = result.scalar_one_or_none()
 
-        if member is None:
-            raise credentials_exception
+        if member:
+            return member
 
-        return member
+        raise credentials_exception

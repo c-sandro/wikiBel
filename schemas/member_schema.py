@@ -6,14 +6,14 @@ class MemberSchemaBase(BaseModel):
     id_u: Optional[int] = None
     name_u: str
     email_u: EmailStr
-    is_premium_u: bool = False
 
     class Config:
         orm_mode = True
 
-#Essas classes são criadas pra não enviar a senha desnecesariamente e arriscar quebrar criptografia
+#Essas classes são criadas pra não enviar a senha desnecessariamente e arriscar quebrar criptografia
 class MemberSchemaCreated(MemberSchemaBase):
     password_u: str
+    token_u: str
 
 class MemberSchemaUpdated(MemberSchemaBase):
     name_u: Optional[str]
