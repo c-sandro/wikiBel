@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerar Roteiro Turístico Curto Para Belém do Pará</title>
+</head>
+<body>
+    <h1>Gerar Roteiro Turístico Curto Para Belém do Pará</h1>
+
+    <form id="roteiroCurtoForm">
+
+        <label>Hora de Início:</label>
+        <input type="time" name="hora_inicio" id="hora_inicio" required><br>
+
+        <label>Hora de Fim:</label>
+        <input type="time" name="hora_fim" id="hora_fim" required><br>
+
+        <label>Preferências (separadas por vírgula):</label>
+        <input type="text" name="preferencias" id="preferencias"><br>
+
+        <button type="submit">Gerar Roteiro Curto</button>
+    </form>
+
+    <h2>Resultado:</h2>
+    <pre id="resultado" style="white-space: pre-wrap;"></pre>
+    <div id="recarregar"></div>
+
+    <script src="/static/js/Roteiro_curto.js"></script>
+    <button onclick="window.location.href='/'">Voltar para a página inicial</button>
+</body>
+</html>

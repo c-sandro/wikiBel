@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     # Caminho inicial das URLs (talvez mude a cada versão?)
     API_V1_SRT: str = '/api/v1'
     GOOGLE_MAPS_API_KEY: str
+    GEMINI_API_KEY: str
 
     # URL do banco de dados
     DB_URL: str = "postgresql://wikibeldbmanager:=<4H98:1ta>y(K4L;r0cOPL&?k9,V4w2M~[Jb4`ntOR%W&]+q#J69ebk&Y6&oDbL@localhost:5432/wikibeldb"
