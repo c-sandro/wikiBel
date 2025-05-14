@@ -21,14 +21,14 @@ oauth2_schema = OAuth2PasswordBearer(
 
 async def authenticate_member(email: EmailStr, password: str, db: AsyncSession) -> Optional[MemberModel]:
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.email_u == email)
+        query = select(MemberModel).filter(MemberModel.email == email)
         result = await session.execute(query)
         member: MemberModel = result.scalars().unique().one_or_none()
 
         if not member:
             return None
 
-        if not verify_password(password, member.password_u):
+        if not verify_password(password, member.password):
             return None
 
         return member

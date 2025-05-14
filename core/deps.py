@@ -46,7 +46,7 @@ async def get_current_member(member_cookie, db: AsyncSession = Depends(get_sessi
         raise credentials_exception
 
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.id_u == username)
+        query = select(MemberModel).filter(MemberModel.id == username)
         result = await session.execute(query)
         member = result.scalar_one_or_none()
 

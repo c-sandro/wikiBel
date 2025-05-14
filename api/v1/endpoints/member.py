@@ -26,10 +26,10 @@ member_cookie = None
 @router.post('/signup', status_code=status.HTTP_201_CREATED, response_model=MemberSchemaBase)
 async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depends(get_session)):
 
-    if not re.search(password_regex, member.password_u):
+    if not re.search(password_regex, member.password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Password too weak (needs lower case, upper case, a number and at least 8 characters)")
-    if not re.search(email_regex, member.email_u):
+    if not re.search(email_regex, member.email):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Invalid email address")
 
@@ -37,7 +37,7 @@ async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depend
 
     new_token: str = None
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.email_u == member.email_u)
+        query = select(MemberModel).filter(MemberModel.email == member.email)
         result = await session.execute(query)
         unique_email_check = result.scalar_one_or_none()
 
@@ -48,16 +48,16 @@ async def post_new_member(member: MemberSchemaCreated, db: AsyncSession = Depend
 
         while True:
             new_token: str = uuid.uuid4()
-            query = select(MemberModel).filter(MemberModel.token_u == str(new_token))
+            query = select(MemberModel).filter(MemberModel.token == str(new_token))
             result = await session.execute(query)
             unique_token_check = result.scalar_one_or_none()
             if not unique_token_check:
                 break
 
     new_member: MemberModel = MemberModel(
-        name_u=member.name_u,
-        email_u=member.email_u,
-        password_u=generate_password_hash(member.password_u),
+        name_u=member.name,
+        email_u=member.email,
+        password_u=generate_password_hash(member.password),
         is_premium_u=False,
         token_u=str(new_token)
     )
@@ -74,7 +74,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     if not member:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect email or password")
 
-    logged_in_user_token = create_access_token(subject=member.token_u)
+    logged_in_user_token = create_access_token(subject=member.token)
     response = JSONResponse(content={"access_token": logged_in_user_token, "token_type": "bearer"}, status_code=status.HTTP_200_OK)
     response.set_cookie(key="access_token", value=f"{logged_in_user_token}", path=f"{settings.API_V1_SRT}/members/account", httponly=True)
     return response
@@ -106,7 +106,7 @@ async def get_account(request: Request, db: AsyncSession = Depends(get_session))
         raise credentials_exception
 
     async with db as session:
-        query = select(MemberModel).filter(MemberModel.token_u == username)
+        query = select(MemberModel).filter(MemberModel.token == username)
         result = await session.execute(query)
         member = result.scalar_one_or_none()
 

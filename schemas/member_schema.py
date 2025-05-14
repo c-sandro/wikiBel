@@ -3,20 +3,20 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 class MemberSchemaBase(BaseModel):
-    id_u: Optional[int] = None
-    name_u: str
-    email_u: EmailStr
+    id: Optional[int] = None
+    name: str
+    email: EmailStr
 
     class Config:
         orm_mode = True
 
 #Essas classes são criadas pra não enviar a senha desnecessariamente e arriscar quebrar criptografia
 class MemberSchemaCreated(MemberSchemaBase):
-    password_u: str
-    token_u: str
+    password: str
+    token: str
 
 class MemberSchemaUpdated(MemberSchemaBase):
-    name_u: Optional[str]
-    email_u: Optional[EmailStr]
-    password_u: Optional[str]
-    is_premium_u: Optional[bool]
+    name: Optional[str]
+    email: Optional[EmailStr]
+    password: Optional[str]
+    is_premium: Optional[bool]
