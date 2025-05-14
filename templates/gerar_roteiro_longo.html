@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gerar Roteiro Turístico</title>
+</head>
+<body>
+    <h1>Gerar Roteiro Turístico Longo Para Belém do Pará</h1>
+
+    <form id="roteiroForm">
+
+        <label>Data de Início:</label>
+        <input type="date" name="data_inicio" id="data_inicio" required><br>
+
+        <label>Data de Fim:</label>
+        <input type="date" name="data_fim" id="data_fim" required><br>
+
+        <label>Preferências (separadas por vírgula):</label>
+        <input type="text" name="preferencias" id="preferencias"><br>
+
+        <button type="submit">Gerar Roteiro</button>
+    </form>
+
+    <h2>Resultado:</h2>
+    <pre id="resultado" style="white-space: pre-wrap;"></pre>
+    <div id="recarregar"></div>
+
+    <script src="/static/js/Roteiro_longo.js"></script>
+    <button onclick="window.location.href='/'">Voltar para a página inicial</button>
+
+    
+</body>
+</html>
