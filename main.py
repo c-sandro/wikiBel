@@ -1,5 +1,8 @@
 from fastapi import FastAPI, APIRouter, Query, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
+from starlette.responses import HTMLResponse, FileResponse
+
 from core.configs import settings
 from api.v1.api import api_router
 from fastapi.responses import HTMLResponse
@@ -13,10 +16,18 @@ app.mount("/static", StaticFiles(directory="templates/static"), name="static")#c
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
-async def view_mapa(request: Request):
-    return templates.TemplateResponse("menu.html", {
-        "request": request,
-    })
+async def root():
+    return FileResponse('templates/menu.html')
+
+@app.get("/api/v1/members/login", response_class=HTMLResponse)
+async def login_screen():
+    return FileResponse('templates/login.html')
+@app.get("/api/v1/members/signup", response_class=HTMLResponse)
+async def signup_screen():
+    return FileResponse('templates/signup.html')
+@app.get("/api/v1/members/account", response_class=HTMLResponse)
+async def account_screen():
+    return FileResponse('templates/account.html')
 
 if __name__ == "__main__":
     import uvicorn
